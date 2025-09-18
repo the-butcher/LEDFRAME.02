@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include <GxEPD2_BW.h>
+#include <qrcode.h>
 
 #include "modules/ModuleBattery.h"
 #include "modules/ModuleWifi.h"
@@ -15,8 +16,8 @@ class ModuleDisp {
     static bool isActive;
 
    public:
-    static void begin();
-    static void prepareSleep();
+    static void powerup();
+    static void depower();
     static void renderBattery(void* parameter);
     static void renderStatWifi(void* parameter);
     static String formatString(String value, char const* format);

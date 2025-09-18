@@ -10,19 +10,16 @@ Adafruit_NeoPixel pixels(1, GPIO_NUM_33, NEO_GRB + NEO_KHZ800);
 
 color_t ModuleSignal::pixelColor = COLOR____BLACK;
 
-void ModuleSignal::begin() {
+void ModuleSignal::powerup() {
 #ifdef USE_NEOPIXEL
     pixels.begin();
 #endif
 }
 
-void ModuleSignal::prepareSleep() {
+void ModuleSignal::depower() {
     pinMode(NEOPIXEL_POWER, OUTPUT);
     digitalWrite(NEOPIXEL_POWER, LOW);
     gpio_hold_dis((gpio_num_t)NEOPIXEL_POWER);
-    pinMode(I2C_POWER, OUTPUT);
-    digitalWrite(I2C_POWER, LOW);
-    gpio_hold_dis((gpio_num_t)I2C_POWER);
 }
 
 color_t ModuleSignal::getPixelColor() {

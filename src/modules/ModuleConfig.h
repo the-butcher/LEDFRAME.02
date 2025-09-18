@@ -29,9 +29,7 @@ typedef struct {
 class ModuleConfig {
    private:
    public:
-    static void begin();
-    static uint64_t millisecondsExpiryConn;
-    static void increaseExpiryByMinutes(uint8_t minutes);
+    static void powerup();
     static conn__________t connConfig;
     static void storeConfig(conn__________t connConfig);
 };

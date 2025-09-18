@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include <WiFi.h>
+#include <esp_wifi.h>
 
 #include "modules/ModuleConfig.h"
 #include "modules/ModuleDisp.h"
@@ -25,8 +26,8 @@ class ModuleWifi {
     static void handleStationDisconnected(WiFiEvent_t event);
 
    public:
-    static void begin(wifi_mode_____e mode);
-    static void prepareSleep();
+    static void powerup(wifi_mode_____e mode);
+    static void depower();
     static bool isConnected();
     static String getNetwork();
     static String getAddress();

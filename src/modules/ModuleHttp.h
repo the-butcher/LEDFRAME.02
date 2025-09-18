@@ -15,9 +15,9 @@ class ModuleHttp {
     static bool hasBegun;
 
    public:
-    static void begin();
-    static void prepareSleep();
-    static void handleCommandPower(AsyncWebServerRequest *request);
+    static void powerup();
+    static void depower();
+    // static void handleCommandPower(AsyncWebServerRequest *request);
     static void handleStatusConfig(AsyncWebServerRequest *request);
     static void handleCommandConfig(AsyncWebServerRequest *request);
     static bool isNumeric(String value);

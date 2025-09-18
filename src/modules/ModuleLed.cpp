@@ -7,13 +7,13 @@
 power_t ModuleLed::power = POWER__OFF;
 uint64_t ModuleLed::autoOffMillis = 0;
 
-void ModuleLed::begin() {
+void ModuleLed::powerup() {
     pinMode(PIN_____PWM____LED, OUTPUT);
     ledcSetup(CHANNEL_PWM____LED, 1000, 8);  // TODO :: research appropriate LED PWM frequency
     ledcAttachPin(PIN_____PWM____LED, CHANNEL_PWM____LED);
 }
 
-void ModuleLed::prepareSleep() {
+void ModuleLed::depower() {
     ModuleLed::setPower(POWER__OFF, 1);
 }
 

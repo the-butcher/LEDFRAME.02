@@ -3,7 +3,7 @@
 uint64_t ModuleTouch::millisDown = 0;
 touch_mode____e ModuleTouch::touchStatus = TOUCH_MODE______NONE;
 
-void ModuleTouch::begin(bool isTouchBegin) {
+void ModuleTouch::powerup(bool isTouchBegin) {
     rtc_gpio_deinit(PIN_____TOUCH);
     pinMode(PIN_____TOUCH, INPUT_PULLUP);
     attachInterrupt(digitalPinToInterrupt(PIN_____TOUCH), ModuleTouch::handleButtonChange, CHANGE);
@@ -31,7 +31,7 @@ void ModuleTouch::handleButtonChange() {
     }
 }
 
-void ModuleTouch::prepareSleep() {
+void ModuleTouch::depower() {
     detachInterrupt(digitalPinToInterrupt(PIN_____TOUCH));
     esp_sleep_enable_ext0_wakeup(PIN_____TOUCH, LOW);
     gpio_hold_en(PIN_____TOUCH);
@@ -47,19 +47,34 @@ void ModuleTouch::loop() {
         ModuleTouch::millisDown = 0;
     }
 
+#ifdef USE___SERIAL
+    if (ModuleTouch::touchStatus != TOUCH_MODE______NONE) {
+        Serial.print("touch mode: ");
+        Serial.println(ModuleTouch::touchStatus);
+    }
+#endif
+
     if (ModuleTouch::touchStatus == TOUCH_MODE______LONG) {
         ModuleSignal::setPixelColor(COLOR__MAGENTA);
-        ModuleMqtt::prepareSleep();                       // disconnect mqtt
-        ModuleHttp::prepareSleep();                       // stop http server
-        ModuleWifi::prepareSleep();                       // disconnect wifi
-        ModuleWifi::begin(WIFI_MODE_________AP);          // restart in AP mode
-        ModuleHttp::begin();                              // start http server
-        ModuleDisp::renderStatWifi(NULL);                 // render on main thread, there appeared to be a problem when running as task
+        ModuleMqtt::depower();                      // disconnect mqtt
+        ModuleHttp::depower();                      // stop http server
+        ModuleWifi::depower();                      // disconnect wifi
+        ModuleWifi::powerup(WIFI_MODE_________AP);  // restart in AP mode
+        ModuleHttp::powerup();                      // start http server
+        xTaskCreatePinnedToCore(ModuleDisp::renderStatWifi, "renderStatWifi", 7500, NULL, 1, NULL, 0);
         ModuleTouch::touchStatus = TOUCH_MODE______NONE;  // treat as handled
     } else if (ModuleTouch::touchStatus == TOUCH_MODE_____SHORT) {
         wifi_mode_____e wifiMode = ModuleWifi::getClientState();
         if (wifiMode == WIFI_MODE_________AP) {
-            ESP.restart();
+            ModuleSignal::setPixelColor(COLOR_____BLUE);
+            ModuleHttp::depower();  // stop http server
+            ModuleWifi::depower();  // disconnect wifi
+            for (uint8_t i = 0; i < 50; i++) {
+                delay(100);
+                if (!ModuleWifi::isConnected()) {
+                    ESP.restart();
+                }
+            }
         } else {
             power_t power = (power_t)(ModuleLed::getPower() + 1);
             if (power > POWER_HIGH) {

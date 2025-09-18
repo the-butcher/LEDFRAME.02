@@ -2,33 +2,40 @@
 
 #include <ArduinoJson.h>
 
-void ModuleWifi::begin(wifi_mode_____e mode) {
+void ModuleWifi::powerup(wifi_mode_____e mode) {
 
-    WiFi.persistent(true);
+    if (ModuleWifi::getClientState() != mode) {
 
-    // ARDUINO_EVENT_WIFI_STA_CONNECTED
-    // WiFi.onEvent(ModuleWifi::handleStationDisconnected, ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
-    if (ModuleWifi::isConnected()) {  // disconnect if already active
-        ModuleMqtt::prepareSleep();   // disconnect mqtt
-        ModuleHttp::prepareSleep();   // stop http server
-        ModuleWifi::prepareSleep();
-    }
+        WiFi.persistent(true);
+        esp_wifi_set_max_tx_power(40);
 
-    if (mode == WIFI_MODE____STATION) {
-        WiFi.mode(WIFI_STA);
-        WiFi.begin(ModuleConfig::connConfig.wifi.ssid, ModuleConfig::connConfig.wifi.wpwd);
-        for (int i = 0; i < 200; i++) {
-            delay(10);
-            if (WiFi.isConnected()) {
-                ModuleConfig::increaseExpiryByMinutes(1);
-                break;
-            };
+        // ARDUINO_EVENT_WIFI_STA_CONNECTED
+        // WiFi.onEvent(ModuleWifi::handleStationDisconnected, ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
+        if (ModuleWifi::isConnected()) {  // disconnect if already active
+            ModuleMqtt::depower();        // disconnect mqtt
+            ModuleHttp::depower();        // stop http server
+            ModuleWifi::depower();
         }
-    } else if (mode == WIFI_MODE_________AP) {
-        WiFi.mode(WIFI_AP);
-        WiFi.softAP(WIFI_NAME_AP.c_str(), NULL);
-        // xTaskCreatePinnedToCore(ModuleDisp::renderStatWifi, "renderStatWifi", 7500, NULL, 1, NULL, 0);
-        ModuleConfig::increaseExpiryByMinutes(5);
+
+        if (mode == WIFI_MODE____STATION) {
+            WiFi.mode(WIFI_STA);
+            WiFi.begin(ModuleConfig::connConfig.wifi.ssid, ModuleConfig::connConfig.wifi.wpwd);
+            for (int i = 0; i < 200; i++) {
+                delay(10);
+                if (WiFi.isConnected()) {
+                    break;
+                };
+            }
+        } else if (mode == WIFI_MODE_________AP) {
+            WiFi.mode(WIFI_AP);
+            WiFi.softAP(WIFI_NAME_AP.c_str(), NULL);
+            for (int i = 0; i < 200; i++) {  // wait for connection
+                delay(10);
+                if (WiFi.isConnected()) {
+                    break;
+                };
+            }
+        }
     }
 }
 
@@ -51,9 +58,7 @@ void ModuleWifi::handleStationDisconnected(WiFiEvent_t event) {
  * can not go to sleep in AP mode, all other modes
  */
 bool ModuleWifi::isReadyToSleep() {
-    // wifi_mode_____e wifiMode = ModuleWifi::getClientState();
-    // return wifiMode != WIFI_MODE_________AP && millis() > ModuleConfig::millisecondsExpiryConn;
-    return millis() > ModuleConfig::millisecondsExpiryConn;
+    return ModuleWifi::getClientState() != WIFI_MODE_________AP;  // may not sleep in wifi mode AP
 }
 
 bool ModuleWifi::isConnected() {
@@ -61,7 +66,7 @@ bool ModuleWifi::isConnected() {
     return wifiMode == WIFI_AP || WiFi.isConnected();  // WiFi.isConnected() includes both WIFI_MODE_STA and WIFI_MODE_APSTA
 }
 
-void ModuleWifi::prepareSleep() {
+void ModuleWifi::depower() {
     if (ModuleWifi::isConnected()) {
         WiFi.softAPdisconnect(true);
         WiFi.disconnect(true);

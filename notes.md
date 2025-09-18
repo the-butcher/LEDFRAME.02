@@ -24,7 +24,6 @@
 ! do not try to start wifi station mode without valid credentials (maybe after a number of unsuccessful connection attempts)
 ! start in AP mode on long button press
 ! adapt wakeup and display redraw cycle when wifi connection attempts have been exceeded
-
-- consider new configuration (do a restart)
-- introduce the general possibility of storing a config in eeprom (seems it must fit 512 bytes)
-- introduce the possibility to upload a json config through a new operation (use code from moth), then continue with that configuration
+! consider new configuration (do a restart)
+! introduce the general possibility of storing a config in eeprom (seems it must fit 512 bytes)
+! introduce the possibility to upload a json config through a new operation (use code from moth), then continue with that configuration

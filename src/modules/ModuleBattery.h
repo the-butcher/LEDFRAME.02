@@ -9,8 +9,8 @@ class ModuleBattery {
     static Adafruit_MAX17048 baseBattery;
 
    public:
-    static void begin();
-    static void prepareSleep();
+    static void powerup();
+    static void depower();
     static float getPercentage();
 };
 

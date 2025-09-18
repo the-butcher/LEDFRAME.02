@@ -24,9 +24,9 @@ class ModuleLed {
     static uint64_t autoOffMillis;
 
    public:
-    static void begin();
+    static void powerup();
     static void loop();
-    static void prepareSleep();
+    static void depower();
     static power_t getPower();
     static void setPower(power_t power, int minutesToAutoOff);
     static bool isReadyToSleep();

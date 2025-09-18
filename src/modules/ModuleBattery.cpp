@@ -4,12 +4,12 @@
 
 Adafruit_MAX17048 ModuleBattery::baseBattery;
 
-void ModuleBattery::begin() {
+void ModuleBattery::powerup() {
     ModuleBattery::baseBattery.begin();
 }
 
-void ModuleBattery::prepareSleep() {
-    // nothing
+void ModuleBattery::depower() {
+    // ModuleBattery::baseBattery.hibernate();
 }
 
 float ModuleBattery::getPercentage() {

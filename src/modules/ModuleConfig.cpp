@@ -1,10 +1,8 @@
 #include "modules/ModuleConfig.h"
 
-uint64_t ModuleConfig::millisecondsExpiryConn = 0;
-
 conn__________t ModuleConfig::connConfig = {};
 
-void ModuleConfig::begin() {
+void ModuleConfig::powerup() {
 
     EEPROM.begin(sizeof(conn__________t) + 1);
 
@@ -13,12 +11,6 @@ void ModuleConfig::begin() {
     if (eepromFlag == 1) {  // stored config expectable
         EEPROM.readBytes(1, &ModuleConfig::connConfig, sizeof(ModuleConfig::connConfig));
     } else {  // no stored config -> create a default config and store to eeprom
-        for (uint8_t count = 0; count < 3; count++) {
-            ModuleSignal::setPixelColor(COLOR______RED);
-            delay(200);
-            ModuleSignal::setPixelColor(COLOR____BLACK);
-            delay(200);
-        }
         String ssid = "your-wifi-ssid";
         ssid.toCharArray(connConfig.wifi.ssid, 32);
         String wpwd = "your-wifi-pass";
@@ -39,11 +31,15 @@ void ModuleConfig::begin() {
 }
 
 void ModuleConfig::storeConfig(conn__________t _connConfig) {
+#ifdef USE_NEOPIXEL
+    for (uint8_t count = 0; count < 3; count++) {
+        ModuleSignal::setPixelColor(COLOR______RED);
+        delay(200);
+        ModuleSignal::setPixelColor(COLOR____BLACK);
+        delay(200);
+    }
+#endif
     EEPROM.write(0, 1);                                       // write eeprom flag
     EEPROM.writeBytes(1, &_connConfig, sizeof(_connConfig));  // write config
     EEPROM.commit();
-}
-
-void ModuleConfig::increaseExpiryByMinutes(uint8_t minutes) {
-    ModuleConfig::millisecondsExpiryConn = max(ModuleConfig::millisecondsExpiryConn, millis() + MILLISECONDS_PER_MINUTE * minutes);
 }

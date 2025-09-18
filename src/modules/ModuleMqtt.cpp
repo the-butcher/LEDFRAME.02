@@ -8,12 +8,12 @@
 
 WiFiClient* ModuleMqtt::wifiClient;
 PubSubClient* ModuleMqtt::mqttClient;
-bool ModuleMqtt::propagatePower = false;
+bool ModuleMqtt::publishStatePending = false;
 bool ModuleMqtt::hasBegun = false;
 String ModuleMqtt::mqttPub = "";
 String ModuleMqtt::mqttSub = "";
 
-void ModuleMqtt::begin() {
+void ModuleMqtt::powerup() {
     if (ModuleWifi::getClientState() == WIFI_MODE____STATION) {  //  do not try to start mqtt without wifi being in station mode
         if (!ModuleMqtt::hasBegun) {
             ModuleMqtt::wifiClient = new WiFiClient();
@@ -63,11 +63,14 @@ void ModuleMqtt::loop() {
         if (!ModuleMqtt::mqttClient->connected()) {
             ModuleMqtt::connect();
         }
+        if (ModuleMqtt::publishStatePending) {
+            ModuleMqtt::publishState();
+        }
         ModuleMqtt::mqttClient->loop();
     }
 }
 
-void ModuleMqtt::prepareSleep() {
+void ModuleMqtt::depower() {
     if (ModuleMqtt::hasBegun) {
         ModuleMqtt::mqttClient->disconnect();            // calls stop() on wificlient
         while (ModuleMqtt::mqttClient->state() != -1) {  // https://github.com/knolleary/pubsubclient/issues/452
@@ -80,14 +83,6 @@ void ModuleMqtt::prepareSleep() {
         ModuleMqtt::wifiClient = NULL;
         ModuleMqtt::hasBegun = false;
     }
-}
-
-void ModuleMqtt::setPropagatePower(bool isPropagatePower) {
-    ModuleMqtt::propagatePower = isPropagatePower;
-}
-
-bool ModuleMqtt::isPropagatePower() {
-    return ModuleMqtt::propagatePower;
 }
 
 mqtt_mode_____e ModuleMqtt::getClientState() {
@@ -158,6 +153,9 @@ void ModuleMqtt::publishState() {
         char outputBuf[128];
         serializeJson(jsonDocument, outputBuf);
         ModuleMqtt::mqttClient->publish(ModuleMqtt::mqttPub.c_str(), outputBuf, true);
+        ModuleMqtt::publishStatePending = false;
+    } else {
+        ModuleMqtt::publishStatePending = true;
     }
 }
 

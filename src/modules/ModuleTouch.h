@@ -24,9 +24,9 @@ class ModuleTouch {
     static touch_mode____e touchStatus;
 
    public:
-    static void begin(bool isTouchBegin);
+    static void powerup(bool isTouchBegin);
     static void loop();
-    static void prepareSleep();
+    static void depower();
     static void handleButtonChange();
     static bool isTouched();
     static bool isReadyToSleep();

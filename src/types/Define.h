@@ -1,8 +1,8 @@
 #ifndef Define_h
 #define Define_h
 
-#define USE___SERIAL = 1;
-#define USE_NEOPIXEL = 1;
+// #define USE___SERIAL = 1;
+// #define USE_NEOPIXEL = 1;
 
 const uint64_t MILLISECONDS_PER_SECOND = 1000;
 const uint64_t MILLISECONDS_PER_MINUTE = MILLISECONDS_PER_SECOND * 60;

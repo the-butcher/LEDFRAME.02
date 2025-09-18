@@ -38,18 +38,16 @@ class ModuleMqtt {
    private:
     static WiFiClient* wifiClient;
     static PubSubClient* mqttClient;
-    static bool propagatePower;
+    static bool publishStatePending;
     static bool hasBegun;
     static String mqttPub;
     static String mqttSub;
 
    public:
-    static void begin();
-    static void prepareSleep();
+    static void powerup();
+    static void depower();
     static void connect();
     static void loop();
-    static void setPropagatePower(bool isPropagatePower);
-    static bool isPropagatePower();
     static void publishState();
     static void clearCommand();
     static mqtt_mode_____e getClientState();

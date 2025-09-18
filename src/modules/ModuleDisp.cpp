@@ -8,16 +8,19 @@ bool ModuleDisp::hasBegun = false;
 bool ModuleDisp::isActive = false;
 GxEPD2_BW<GxEPD2_102, GxEPD2_102::HEIGHT> ModuleDisp::baseDisplay(GxEPD2_102(GPIO_NUM_14, GPIO_NUM_15, GPIO_NUM_16, GPIO_NUM_17));
 
-void ModuleDisp::begin() {
+void ModuleDisp::powerup() {
     if (!ModuleDisp::hasBegun) {
         ModuleDisp::baseDisplay.init(115200, true, 2, false);
         ModuleDisp::hasBegun = true;
     }
 }
 
-void ModuleDisp::prepareSleep() {
+void ModuleDisp::depower() {
     if (ModuleDisp::hasBegun) {
         ModuleDisp::baseDisplay.hibernate();
+        pinMode(I2C_POWER, OUTPUT);  // display is wired to I2C power which is not needed otherwise, and it can be turned off
+        digitalWrite(I2C_POWER, LOW);
+        gpio_hold_dis((gpio_num_t)I2C_POWER);
     }
 }
 
@@ -29,15 +32,21 @@ String ModuleDisp::formatString(String value, char const* format) {
 
 void ModuleDisp::renderStatWifi(void* parameter) {
 
-    ModuleDisp::isActive = true;
-    ModuleDisp::begin();
+    while (ModuleDisp::isActive) {
+        vTaskDelay(100);
+    }
 
-    ModuleDisp::baseDisplay.setRotation(1);
+    ModuleDisp::isActive = true;
+    ModuleDisp::powerup();
+
+    ModuleDisp::baseDisplay.setRotation(3);
     ModuleDisp::baseDisplay.setFont(&px_5_7);
     ModuleDisp::baseDisplay.setTextColor(GxEPD_BLACK);
 
     ModuleDisp::baseDisplay.setFullWindow();
     ModuleDisp::baseDisplay.firstPage();
+
+    wifi_mode_____e wifiMode = ModuleWifi::getClientState();
 
     do {
 
@@ -63,6 +72,24 @@ void ModuleDisp::renderStatWifi(void* parameter) {
         ModuleDisp::baseDisplay.setCursor(10, 68);
         ModuleDisp::baseDisplay.print(ModuleMqtt::getClientState());
 
+        if (wifiMode == WIFI_MODE_________AP) {
+            String address = "http://" + ModuleWifi::getAddress() + "/stat/config";
+            char addressBuf[address.length() + 1];
+            address.toCharArray(addressBuf, address.length() + 1);
+            int qrCodeX = 85;
+            int qrCodeY = 37;
+            QRCode qrcodeAddress;
+            uint8_t qrcodeDataAddress[qrcode_getBufferSize(3)];
+            qrcode_initText(&qrcodeAddress, qrcodeDataAddress, 3, 0, addressBuf);
+            for (uint8_t y = 0; y < qrcodeAddress.size; y++) {
+                for (uint8_t x = 0; x < qrcodeAddress.size; x++) {
+                    if (qrcode_getModule(&qrcodeAddress, x, y)) {
+                        baseDisplay.fillRect(x + qrCodeX, y + qrCodeY, 1, 1, GxEPD_BLACK);
+                    }
+                }
+            }
+        }
+
     } while (ModuleDisp::baseDisplay.nextPage());
 
     ModuleDisp::isActive = false;
@@ -71,9 +98,13 @@ void ModuleDisp::renderStatWifi(void* parameter) {
 
 void ModuleDisp::renderBattery(void* parameter) {
 
+    while (ModuleDisp::isActive) {
+        vTaskDelay(100);
+    }
+
     ModuleDisp::isActive = true;
 
-    ModuleDisp::begin();
+    ModuleDisp::powerup();
 
     ModuleDisp::baseDisplay.setRotation(0);
     ModuleDisp::baseDisplay.setFont(&px_5_7);
@@ -112,8 +143,6 @@ void ModuleDisp::renderBattery(void* parameter) {
 
         ModuleDisp::baseDisplay.setCursor(dispMidX - tbw / 2, dispMidY - 45);
         ModuleDisp::baseDisplay.print(cellPercentFormatted);
-        // display.setCursor(44, 105 - numBar * rectDimY);
-        // display.print("%");
 
     } while (ModuleDisp::baseDisplay.nextPage());
 
