@@ -61,10 +61,10 @@ void powerupConn() {
 }
 
 uint8_t getTimerWakeupMinutes() {
-    if (bootCount == 1) {
+    if (bootCount == 1) {  // clear the wifi info display upon first wakeup
         return 1;
     } else {
-        return hasExceededMaxConnectionAttempts() ? 30 : 1;
+        return hasExceededMaxConnectionAttempts() ? WAKEUP_MINUTES_NO_CONN : WAKEUP_MINUTES____CONN;
     }
 }
 
@@ -112,8 +112,8 @@ void setup() {
 
     powerupConn();
 
-    uint8_t bootCountRedrawRatio = 30 / getTimerWakeupMinutes();  // 1 in case of 30 minute interval, 30 in case of 1 minute interval
-                                                                  // main task is running on core 1
+    uint8_t bootCountRedrawRatio = WAKEUP_MINUTES_NO_CONN / getTimerWakeupMinutes();  // 1 in case of WAKEUP_MINUTES_NO_CONN minute interval, WAKEUP_MINUTES_NO_CONN in case of WAKEUP_MINUTES____CONN minute interval
+                                                                                      // main task is running on core 1
     if (bootCount == 0) {
         xTaskCreatePinnedToCore(ModuleDisp::renderStatWifi, "renderStatWifi", 7500, NULL, 1, NULL, 0);
     } else if (bootCount == 1 || bootCount % bootCountRedrawRatio == 0) {
